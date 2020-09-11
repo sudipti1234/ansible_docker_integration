@@ -1,0 +1,55 @@
+- hosts : all
+  gather_facts : false
+  tasks : 
+    - name : Configuring yum for docker installation
+      yum_repository : 
+        name : docker_repo
+        baseurl : https://download.docker.com/linux/centos/7/x86_64/stable/
+        description : my docker repo description
+        enabled : true
+        gpgcheck : no
+
+    - name : Install docker software
+      command : "yum install docker-ce -y --nobest"
+
+    - name : Enable docker services
+      service : 
+        name : "docker"
+        state : started
+        enabled : yes 
+
+    - name : Install python
+      package : 
+        name : python3
+        state : present
+
+    - name : Install docker python library
+      pip :
+        name : docker-py
+
+    - name : Pull image for docker
+      docker_image :
+        name : httpd
+        source : pull
+
+    - name : Create source code directory
+      file :
+        path : /root/mycode
+        state : directory
+
+    - name : Copy code to remote node
+      copy : 
+        dest : /root/mycode/index.html
+        src : index.html
+
+    - name : Run container of httpd
+      docker_container :
+        name : webserver
+        image : httpd
+        state : started
+        exposed_ports :
+          - "80"
+        ports :
+          - "81:80"
+        volumes : 
+          - /root/mycode:/usr/local/apache2/htdocs/
